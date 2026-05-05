@@ -1,0 +1,10 @@
+Introduction to Machine Learning
+
+Machine learning is a branch of artificial intelligence that enables systems to learn and improve from experience. It focuses on developing computer programs that can access data and use it to learn for themselves.
+
+Types of Machine Learning:
+- Supervised Learning
+- Unsupervised Learning
+- Reinforcement Learning
+
+Applications include image recognition, natural language processing, and recommendation systems.

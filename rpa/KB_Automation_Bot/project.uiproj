@@ -1,0 +1,6 @@
+{
+  "Name": "KB_Automation_Bot",
+  "ProjectType": "Process",
+  "Description": "Automates ingestion of documents from folder, performs duplicate checks,\r\nextracts text content, creates knowledge base articles via API,\r\nupdates status workflow, handles errors with logging and screenshots,\r\nand sends execution summary email to admin.",
+  "MainFile": "Main.xaml"
+}
