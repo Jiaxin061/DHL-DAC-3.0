@@ -9,6 +9,7 @@ const healthRouter   = require('./routes/health');
 const articlesRouter = require('./routes/articles');
 const uploadRouter   = require('./routes/upload');
 const authRouter     = require('./routes/auth');
+const draftRouter    = require('./routes/draft');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -23,6 +24,7 @@ app.use('/health',       healthRouter);
 app.use('/api/articles', articlesRouter);
 app.use('/api/upload',   uploadRouter);
 app.use('/api/login',    authRouter);
+app.use('/api/draft',    draftRouter);
 
 // 404 fallback
 app.use((req, res) => {
