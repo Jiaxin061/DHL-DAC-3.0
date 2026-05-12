@@ -20,3 +20,9 @@ This folder contains design documentation for the UiPath RPA integration.
 | GET    | /api/articles?search=&status=| Search existing articles    |
 
 > Backend API is RPA-ready from Phase 9 onward.
+
+## Assignment Report Preview
+
+<embed src="../DHL%20DAC%203.0%20Assignment_Yap%20Jia%20Xin.pdf" type="application/pdf" width="100%" height="800px" />
+
+[View or Download Full Assignment PDF](../DHL%20DAC%203.0%20Assignment_Yap%20Jia%20Xin.pdf)
