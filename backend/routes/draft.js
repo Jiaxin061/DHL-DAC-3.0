@@ -1,7 +1,7 @@
 const express    = require('express');
 const router     = express.Router();
 const db         = require('../config/db');
-const { parseText, generateTags } = require('../utils/buildDraft');
+const { generateKnowledgeDraft } = require('../services/aiService');
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
 const dbRun = (sql, params = []) =>
@@ -68,15 +68,19 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // ── Parse extracted text ──────────────────────────────────────────────────
-    const parsed = parseText(sourceFile.extractedText);
-    const tags   = generateTags(sourceFile.extractedText);
+    // ── Parse extracted text with AI ──────────────────────────────────────────
+    let parsed;
+    try {
+      parsed = await generateKnowledgeDraft(sourceFile.extractedText);
+    } catch (e) {
+      return res.status(500).json({ success: false, error: 'Failed to generate AI Draft' });
+    }
 
     // Allow caller to override any parsed field
     const title   = (overrides.title   || parsed.title).trim();
     const summary = (overrides.summary || parsed.summary).trim();
     const content = (overrides.content || parsed.content).trim();
-    const finalTags = overrides.tags || tags;
+    const finalTags = overrides.tags || parsed.tags;
 
     // ── Insert KnowledgeArticle ───────────────────────────────────────────────
     const insertResult = await dbRun(
@@ -116,7 +120,7 @@ router.post('/', async (req, res) => {
           title:   parsed.title,
           summary: parsed.summary,
           content: parsed.content,
-          tags,
+          tags: parsed.tags,
         },
         sourceFile: {
           id:       sourceFile.id,
@@ -151,8 +155,12 @@ router.post('/from-text', async (req, res) => {
       return res.status(400).json({ success: false, error: 'text is required' });
     }
 
-    const parsed = parseText(text);
-    const tags   = generateTags(text);
+    let parsed;
+    try {
+      parsed = await generateKnowledgeDraft(text);
+    } catch (e) {
+      return res.status(500).json({ success: false, error: 'Failed to generate AI Draft' });
+    }
 
     // Save raw text as a SourceFile record (no actual file on disk)
     const sfResult = await dbRun(
@@ -167,7 +175,7 @@ router.post('/from-text', async (req, res) => {
       `INSERT INTO KnowledgeArticle
          (title, summary, content, tags, status, sourceFileName, createdBy)
        VALUES (?, ?, ?, ?, 'Draft', ?, ?)`,
-      [parsed.title, parsed.summary, parsed.content, tags, fileName, createdBy]
+      [parsed.title, parsed.summary, parsed.content, parsed.tags, fileName, createdBy]
     );
     const articleId = artResult.lastID;
 
@@ -192,7 +200,7 @@ router.post('/from-text', async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Draft created from raw text',
-      data: { article, parsedFields: { ...parsed, tags } },
+      data: { article, parsedFields: parsed },
     });
 
   } catch (err) {
