@@ -4,7 +4,8 @@
   "description": "Automates ingestion of documents from folder, performs duplicate checks,\r\nextracts text content, creates knowledge base articles via API,\r\nupdates status workflow, handles errors with logging and screenshots,\r\nand sends execution summary email to admin.",
   "main": "Main.xaml",
   "dependencies": {
-    "UiPath.System.Activities": "[26.2.1]"
+    "UiPath.System.Activities": "[26.2.1]",
+    "UiPath.WebAPI.Activities": "[2.4.0]"
   },
   "webServices": [],
   "entitiesStores": [],
