@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getArticle, updateArticle } from '../services/api';
+import { getArticle, updateArticle, deleteArticle } from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 
 export default function DraftBuilder() {
@@ -47,6 +47,16 @@ export default function DraftBuilder() {
       setError(err.response?.data?.error || 'Save failed.');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDeleteDraft() {
+    if (!window.confirm('Are you sure you want to discard this draft? This cannot be undone.')) return;
+    try {
+      await deleteArticle(id);
+      navigate('/articles');
+    } catch (err) {
+      setError('Failed to discard draft.');
     }
   }
 
@@ -140,6 +150,7 @@ export default function DraftBuilder() {
             {article && <>Source: <strong style={{ color: 'var(--text-secondary)' }}>{article.sourceFileName || '—'}</strong></>}
           </div>
           <div className="flex-row">
+            <button className="btn btn-danger" onClick={handleDeleteDraft}>🗑️ Discard Draft</button>
             <button className="btn btn-secondary" onClick={() => navigate(`/articles/${id}`)}>View Article</button>
             <button
               id="btn-save-draft"

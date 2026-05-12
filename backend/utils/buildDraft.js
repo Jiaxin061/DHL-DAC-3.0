@@ -50,7 +50,13 @@ function parseText(rawText) {
   }
 
   // ── Content: everything after the summary paragraph ───────────────────────────
-  const content = paragraphs.slice(contentStart).join('\n\n').trim();
+  let content = paragraphs.slice(contentStart).join('\n\n').trim();
+
+  // Fallback: If text was too short to have separate content paragraphs,
+  // just use the entire raw text as the content so it's not empty.
+  if (!content) {
+    content = text;
+  }
 
   return { title: title.trim(), summary, content };
 }

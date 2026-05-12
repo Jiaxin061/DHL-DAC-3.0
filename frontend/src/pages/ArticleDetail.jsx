@@ -156,9 +156,9 @@ export default function ArticleDetail() {
                 </div>
               )}
 
-              {user?.role === 'Admin' && (
+              {(user?.role === 'Admin' || article.status === 'Draft') && (
                 <button className="btn btn-danger btn-full" onClick={handleDelete} style={{ marginTop: '0.5rem' }}>
-                  🗑️ Delete
+                  🗑️ Delete {article.status === 'Draft' ? 'Draft' : 'Article'}
                 </button>
               )}
             </div>

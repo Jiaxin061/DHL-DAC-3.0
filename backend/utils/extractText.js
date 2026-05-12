@@ -8,6 +8,23 @@ const { simpleParser }         = require('mailparser');
 const officeParser             = require('officeparser');
 
 /**
+ * Recursively extracts text from officeparser JSON AST format
+ */
+function flattenOfficeText(obj) {
+  if (typeof obj === 'string') return obj;
+  if (!obj) return '';
+  let result = '';
+  if (obj.text) result += obj.text + '\n';
+  if (Array.isArray(obj)) {
+    for (const item of obj) result += flattenOfficeText(item);
+  } else if (typeof obj === 'object') {
+    if (obj.content) result += flattenOfficeText(obj.content);
+    if (obj.children) result += flattenOfficeText(obj.children);
+  }
+  return result;
+}
+
+/**
  * Extracts plain text from a file based on its extension.
  *
  * @param {string} filePath  - Absolute path to the uploaded file
@@ -38,8 +55,9 @@ async function extractText(filePath, fileType) {
     fileType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
     ext === '.pptx'
   ) {
-    const text = await officeParser.parseOfficeAsync(filePath);
-    return text.trim();
+    const parsedObj = await officeParser.parseOffice(filePath);
+    if (!parsedObj) return '';
+    return flattenOfficeText(parsedObj).trim();
   }
 
   // ── TXT & JSON ─────────────────────────────────────────────────────────────
