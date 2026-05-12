@@ -30,7 +30,7 @@ router.post('/', upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({
       success: false,
-      error: 'No file uploaded. Use field name "file" and ensure type is PDF, DOCX, or TXT.',
+      error: 'No file uploaded. Ensure type is PDF, DOCX, PPTX, TXT, JSON, EML, PNG, JPG.',
     });
   }
 

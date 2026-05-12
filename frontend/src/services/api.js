@@ -33,4 +33,8 @@ export const uploadFile = (file) => {
   });
 };
 
+export const uploadRawText = (rawText) => {
+  return api.post('/api/raw-text', { rawText });
+};
+
 export default api;

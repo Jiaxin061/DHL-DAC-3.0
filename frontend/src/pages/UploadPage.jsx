@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { uploadFile } from '../services/api';
+import { uploadFile, uploadRawText } from '../services/api';
 import axios from 'axios';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
@@ -23,17 +23,39 @@ export default function UploadPage() {
   const [creatingDraft, setCreatingDraft] = useState(false);
   const [error,         setError]         = useState('');
   const [step,          setStep]          = useState(1); // 1=pick, 2=extracted, 3=done
+  const [activeTab,     setActiveTab]     = useState('file'); // 'file' or 'text'
+  const [rawText,       setRawText]       = useState('');
 
-  const FILE_ICON = { 'application/pdf': '📄', 'text/plain': '📝', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '📝' };
+  const FILE_ICON = { 
+    'application/pdf': '📄', 
+    'text/plain': '📝', 
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '📝',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': '📊',
+    'application/json': '📦',
+    'message/rfc822': '📧',
+    'image/png': '🖼️',
+    'image/jpeg': '🖼️',
+    'image/jpg': '🖼️'
+  };
 
   function handleFileSelect(selected) {
     setError('');
     setExtracted(null);
     setStep(1);
     if (!selected) return;
-    const allowed = ['application/pdf', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (!allowed.includes(selected.type)) {
-      setError('Unsupported file type. Please upload a PDF, DOCX, or TXT file.');
+    const allowed = [
+      'application/pdf', 
+      'text/plain', 
+      'application/json',
+      'message/rfc822',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'image/png',
+      'image/jpeg',
+      'image/jpg'
+    ];
+    if (!allowed.includes(selected.type) && !selected.name.endsWith('.eml')) {
+      setError('Unsupported file type. Please upload a PDF, DOCX, PPTX, TXT, JSON, EML, or Image (PNG/JPG).');
       return;
     }
     setFile(selected);
@@ -53,6 +75,20 @@ export default function UploadPage() {
       setStep(2);
     } catch (err) {
       setError(err.response?.data?.error || 'Upload failed. Is the backend running?');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleRawTextSubmit() {
+    if (!rawText.trim()) return;
+    setUploading(true); setError('');
+    try {
+      const res = await uploadRawText(rawText);
+      setExtracted(res.data.data);
+      setStep(2);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to process text.');
     } finally {
       setUploading(false);
     }
@@ -111,8 +147,25 @@ export default function UploadPage() {
       {error && <div className="alert alert-error">⚠️ {error}</div>}
 
       <div className="card">
-        {/* Step 1 — file picker */}
         {step === 1 && (
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
+            <button 
+              className={`btn ${activeTab === 'file' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+              onClick={() => setActiveTab('file')}
+            >
+              📄 File Upload
+            </button>
+            <button 
+              className={`btn ${activeTab === 'text' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+              onClick={() => setActiveTab('text')}
+            >
+              📝 Paste Text
+            </button>
+          </div>
+        )}
+
+        {/* Step 1 — file picker */}
+        {step === 1 && activeTab === 'file' && (
           <>
             <div
               id="upload-zone"
@@ -124,11 +177,11 @@ export default function UploadPage() {
             >
               <div className="upload-icon">☁️</div>
               <p><strong>Click to browse</strong> or drag &amp; drop your file here</p>
-              <p className="file-types">Supported: PDF · DOCX · TXT &nbsp;|&nbsp; Max 10 MB</p>
+              <p className="file-types">Supported: PDF · DOCX · PPTX · TXT · JSON · EML · PNG · JPG &nbsp;|&nbsp; Max 10 MB</p>
             </div>
             <input
               ref={inputRef} type="file" style={{ display: 'none' }}
-              accept=".pdf,.docx,.txt,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              accept=".pdf,.docx,.pptx,.txt,.json,.eml,.png,.jpg,.jpeg,application/pdf,text/plain,application/json,message/rfc822,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/png,image/jpeg"
               onChange={e => handleFileSelect(e.target.files[0])}
             />
 
@@ -151,6 +204,31 @@ export default function UploadPage() {
                 onClick={handleUpload}
               >
                 {uploading ? '⏳ Uploading...' : '⬆️ Upload & Extract'}
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Step 1 — raw text input */}
+        {step === 1 && activeTab === 'text' && (
+          <>
+            <div className="form-group">
+              <label className="form-label">Raw Operational Content</label>
+              <textarea
+                className="form-textarea"
+                placeholder="Paste Teams chat logs, Telegram messages, Email threads, or Notes here..."
+                value={rawText}
+                onChange={e => setRawText(e.target.value)}
+                style={{ minHeight: '200px' }}
+              />
+            </div>
+            <div className="flex-end mt-3">
+              <button
+                className="btn btn-primary"
+                disabled={!rawText.trim() || uploading}
+                onClick={handleRawTextSubmit}
+              >
+                {uploading ? '⏳ Processing...' : '✨ Generate Draft'}
               </button>
             </div>
           </>

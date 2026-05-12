@@ -20,18 +20,24 @@ const storage = multer.diskStorage({
   },
 });
 
-// Only accept PDF, DOCX, and TXT files
+// Accept PDF, DOCX, TXT, and images (PNG, JPG, JPEG)
 const fileFilter = (req, file, cb) => {
   const allowed = [
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'text/plain',
+    'application/json',
+    'message/rfc822',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'image/png',
+    'image/jpeg',
+    'image/jpg'
   ];
 
-  if (allowed.includes(file.mimetype)) {
+  if (allowed.includes(file.mimetype) || file.originalname.endsWith('.eml')) {
     cb(null, true);
   } else {
-    cb(new Error('Unsupported file type. Only PDF, DOCX, and TXT are allowed.'), false);
+    cb(new Error('Unsupported file type. Allowed: PDF, DOCX, PPTX, TXT, JSON, EML, PNG, JPG.'), false);
   }
 };
 
