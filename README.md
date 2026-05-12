@@ -1,8 +1,8 @@
 # 📚 AI Knowledge Base System
 
-A robust, full-stack application designed to transform unstructured documents (PDF, DOCX, TXT) into structured, searchable knowledge base articles. 
+A robust, full-stack application designed to transform unstructured documents and operational data (PDF, DOCX, TXT, PPTX, EML, JSON chat logs, Images) into structured, searchable knowledge base articles. 
 
-The system features an automated extraction pipeline, a strict review workflow (`Draft` → `Reviewed` → `Published`), detailed audit history, and built-in support for UiPath RPA (Robotic Process Automation) document ingestion.
+The system features an automated extraction pipeline, an AI-powered drafting engine (Google Gemini API), a strict review workflow (`Draft` → `Reviewed` → `Published`), detailed audit history, and built-in support for UiPath RPA (Robotic Process Automation) document ingestion.
 
 ---
 
@@ -18,7 +18,9 @@ The system features an automated extraction pipeline, a strict review workflow (
 - Node.js & Express
 - SQLite (sqlite3) with WAL mode for high concurrency
 - Multer (File upload handling)
-- pdf-parse & mammoth (Text extraction)
+- Document Parsing (`pdf-parse`, `mammoth`, `officeparser`, `mailparser`)
+- OCR Engine (`tesseract.js` for Image processing)
+- AI Engine (`@google/generative-ai` for Gemini Flash generation)
 
 **Automation**
 - UiPath (Automated local folder monitoring and batch ingestion)
@@ -27,11 +29,16 @@ The system features an automated extraction pipeline, a strict review workflow (
 
 ## ✨ Key Features
 
-1. **Intelligent Document Parsing**
-   - Upload PDF, DOCX, or TXT files.
-   - Automatically extracts text and generates a draft with a title, summary, content, and tags.
+1. **Multi-format Document Ingestion**
+   - Upload PDF, DOCX, TXT, PPTX, EML (Email Threads), JSON (Chat Logs), or Image files (PNG, JPG).
+   - Alternatively, directly paste raw operational text for instant processing.
+   - Built-in text extraction and OCR (Optical Character Recognition) handles messy data gracefully.
 
-2. **Strict Publishing Workflow**
+2. **AI-Powered Drafting Engine**
+   - Extracted text is fed into **Google Gemini (Flash)**.
+   - Automatically generates a structured draft featuring a precise Title, Summary, structured SOP Steps, extracted Warnings, and Auto-Tags.
+
+3. **Strict Publishing Workflow**
    - Articles follow a strictly enforced status flow: `Draft` → `Reviewed` → `Published`.
    - Each transition allows reviewers to add approval remarks.
 
@@ -57,6 +64,10 @@ The backend runs on port `5000` and uses a local SQLite database.
 ```bash
 # Navigate to the backend directory
 cd backend
+
+# Configure your environment variables
+# Edit the .env file and add your Gemini API Key:
+# GEMINI_API_KEY=your_gemini_api_key_here
 
 # Install dependencies
 npm install
@@ -98,9 +109,9 @@ npm run dev
 | `PUT`  | `/api/articles/:id` | Update an article (increments version) |
 | `PATCH`| `/api/articles/:id/status` | Promote workflow status (Draft → Reviewed → Published) |
 | `GET`  | `/api/articles/:id/history`| View audit trail of an article |
-| `POST` | `/api/upload` | Upload a file and extract its text |
-| `POST` | `/api/draft` | Create an auto-draft from an uploaded file ID |
-| `POST` | `/api/draft/from-text` | Create a draft directly from raw text (For RPA) |
+| `POST` | `/api/upload` | Upload a file and extract its text (OCR applied for images) |
+| `POST` | `/api/draft` | Generate an AI draft from an uploaded file ID via Gemini |
+| `POST` | `/api/draft/from-text` | Generate an AI draft directly from raw text (For RPA) |
 
 ---
 
@@ -121,7 +132,8 @@ knowledge-base-system/
 │   ├── config/               # Database and Multer configurations
 │   ├── database/             # SQLite DB files
 │   ├── routes/               # API endpoint definitions
-│   ├── utils/                # Text extraction and parsing logic
+│   ├── services/             # AI Integration (aiService.js)
+│   ├── utils/                # Text extraction, OCR, and parsing logic
 │   └── server.js             # Entry point
 ├── frontend/                 # React Application
 │   ├── src/
