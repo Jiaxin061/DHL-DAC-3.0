@@ -1,1 +1,4 @@
 ﻿D:\SECJH\Y3S2\WT\DHL\knowledge-base-system\inputs\new_article.txt
+D:\SECJH\Y3S2\WT\DHL\knowledge-base-system\inputs\newText.txt
+D:\SECJH\Y3S2\WT\DHL\knowledge-base-system\inputs\newText.txt
+D:\SECJH\Y3S2\WT\DHL\knowledge-base-system\inputs\newText.txt
